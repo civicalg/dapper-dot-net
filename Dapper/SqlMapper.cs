@@ -1767,9 +1767,9 @@ namespace Dapper
             // initially we tried TVP, however it performs quite poorly.
             // keep in mind SQL support up to 2000 params easily in sp_executesql, needing more is rare
 
-            if (FeatureSupport.Get(command.Connection).Arrays)
+            var arrayParm = command.CreateParameter();
+            if (FeatureSupport.Get(arrayParm).Arrays)
             {
-                var arrayParm = command.CreateParameter();
                 arrayParm.Value = SanitizeParameterValue(value);
                 arrayParm.ParameterName = namePrefix;
                 command.Parameters.Add(arrayParm);
@@ -1823,6 +1823,8 @@ namespace Dapper
                 var regexIncludingUnknown = @"([?@:]" + Regex.Escape(namePrefix) + @")(?!\w)(\s+(?i)unknown(?-i))?";
                 if (count == 0)
                 {
+                    var dummyParam = command.CreateParameter();
+                    var emptySelectTemplate = FeatureSupport.Get(dummyParam).EmptyListSelectTemplate;
                     command.CommandText = Regex.Replace(command.CommandText, regexIncludingUnknown, match =>
                     {
                         var variableName = match.Groups[1].Value;
@@ -1833,10 +1835,9 @@ namespace Dapper
                         }
                         else
                         {
-                            return "(SELECT " + variableName + " WHERE 1 = 0)";
+                            return string.Format(emptySelectTemplate, variableName);
                         }
                     }, RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant);
-                    var dummyParam = command.CreateParameter();
                     dummyParam.ParameterName = namePrefix;
                     dummyParam.Value = DBNull.Value;
                     command.Parameters.Add(dummyParam);
