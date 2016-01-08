@@ -16,7 +16,7 @@ namespace Dapper
         private static readonly FeatureSupport
             Default = new FeatureSupport(false),
             Postgres = new FeatureSupport(true),
-            Db2Informix = new FeatureSupport(false, "(select {0} from systables where 1 = 0)");
+            Db2Informix = new FeatureSupport(false, "(select tabname from systables where 1 = 0)");
 
         /// <summary>
         /// Gets the feature set based on the passed connection
